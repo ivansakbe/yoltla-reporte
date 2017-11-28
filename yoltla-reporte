@@ -69,5 +69,5 @@ fi
 echo "============"
 if [[ $3 -eq "-a" ]]; then
 	sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | tac
+	echo "============"
 fi
-echo "============"
