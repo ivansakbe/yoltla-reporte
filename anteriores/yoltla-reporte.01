@@ -1,46 +1,57 @@
 #!/bin/bash
+
+#
+
 #echo $(( (`date +%s` - `date +%s -d '2014/11/17'`) / 86400 )) days ago
+
+
 function uso(){
 echo "#
 Programa para reportar la cantidad de  horas y cores utilizados en el cluster YOLTLA
 
-Usar yoltla-reporte  [ Tipo de Reporte ] [Usuario] [Formato de tiempo]
+Usar yoltla-reporte [ -r reporte resumido ] [-a reporte amplio] [ -h ] usuario fecha 
 
-Para solicitar un reporte resumido de el número de horas utilizados desde hace 30 días por el usuario 'ejemplo' ejecutar
+-d		Inidica el número de días a consultar en la base de datos del cluster. 
 
-yoltla-reporte -r ejemplo -d 30 
+-h|--help 	Muestra esta ayuda 
+
+Para solicitar el número de horas utilizados desde hace 30 días ejecutar
+
+yoltla-reporte -d 30 
 
 Sin opciones se reportan solamente los últimos 3 días 
-
-para mas informacion ejecute yoltla-reporte -h | --help
 "
+
 exit 1
 }
-function ayuda(){
-       echo "#
-       -r Realiza un reporte resumido (-r usuario fecha)
-       -a Realiza un reporte amplio (-a usuario fecha)
-       -h --help  Ayuda
-       "
-}
 function main(){
+
 OPTALL=""
+USUARIO=$2
+DIAS=${3:?: uso reporte $USUARIO DIAS}
 COMPLETO="-X  --format=JobName%35,start,Partition,elapsed,NCPUS,NNodes,CPUTime"
-#DIAS=$(( (`date +%s` - `date +%s -d $DIAS`) / 86400 ))
+
+DIAS=$(( (`date +%s` - `date +%s -d $DIAS`) / 86400 ))
 #DIAS=(date +%s - date +%s -d DIAS )/86400
+
+
 #sacct -u $USR -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $OPTALL
+
 #sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | tac
-echo -n "NOMBRE: "
-grep $USUARIO /etc/passwd | awk -F: '{ print $5 }'
-echo "USUARIO: $USUARIO"
-echo "DIAS: $DIAS"
+cat /etc/passwd | grep -w $USUARIO
+echo "USUARIO: $USUARIO DIAS: $DIAS"
 echo -n  "TOTAL HORAS: "
 sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) -n -X --format=CPUTimeRAW | awk '{ x += $1 } END { print int(x/3600) }'
+
 echo -n  "TOTAL CORES: "
 sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) -n -X --format=NCPUS | awk '{ x += $1 } END { print x }'
+
 TRABAJOS=$(sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) | wc -l)
+
 echo "==========="
+
 echo "TOTAL TRABAJOS: $TRABAJOS " 
+
 if [[ $TRABAJOS -ne 0 ]]; then
 	echo -n "q4d:	";sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | grep -c q4d
 	echo -n "q7d:	";sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | grep -c q7d
@@ -55,32 +66,21 @@ fi
 
 echo "============"
 }
-USUARIO=${2:?: uso reporte USUARIO DIAS}
-if [[ $(grep -c $USUARIO /etc/passwd) -ne 0 ]]; then
-case $3 in
-	-f) DIAS=$(( (`date +%s` - `date +%s -d $4`) / 86400 ))
-		;;
-	-d) DIAS=${4:?: uso reporte $USUARIO DIAS}
-		;;
-	*) DIAS=3
-		;;
-esac
-
-case $1 in
-	-r) main
-            ;;
-	-a) main 
-            sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | tac
-            echo "==========="
-	    ;;
-	-h) ayuda
-	    ;;
-	--help) ayuda
-	    ;;
-	*) uso
-	   ;;
-esac
-
-else 
-	echo "Usuario Invalido"
+if [[ $1 == "-r" ]]; then
+	main
+	exit 1
+elif [[ $1 == "-a" ]]; then
+	main
+	sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | tac
+	echo "==========="
+	exit 1
+elif [[ $1 == "-h" ]]; then
+	echo "#
+	-r Realiza un reporte resumido (-r usuario fecha)
+	-a Realiza un reporte amplio (-a usuario fecha)
+	-h Ayuda
+	"
+	exit 1
+else
+	uso
 fi
