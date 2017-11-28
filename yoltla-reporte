@@ -53,10 +53,7 @@ echo "==========="
 echo "TOTAL TRABAJOS: $TRABAJOS " 
 
 if [[ $TRABAJOS -ne 0 ]]; then
-	echo -n "q1:	";sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | grep -c q1
 	echo -n "q4d:	";sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | grep -c q4d
-	
-	
 	echo -n "q7d:	";sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | grep -c q7d
 	echo -n "q1h:	";sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | grep -c q1h
 	echo -n "q1d:	";sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | grep -c q1d
