@@ -1,14 +1,19 @@
 #!/bin/bash
 
+#
+
+#echo $(( (`date +%s` - `date +%s -d '2014/11/17'`) / 86400 )) days ago
+
+
 uso(){
 echo "#
 Programa para reportar la cantidad de  horas y cores utilizados en el cluster YOLTLA
 
 Usar yoltla-reporte [ -d # de  días ] [ -h | --help ] 
 
--d              Inidica el número de días a consultar en la base de datos del cluster. 
+-d		Inidica el número de días a consultar en la base de datos del cluster. 
 
--h|--help       Muestra esta ayuda 
+-h|--help 	Muestra esta ayuda 
 
 Para solicitar el número de horas utilizados desde hace 30 días ejecutar
 
@@ -25,16 +30,44 @@ USUARIO=${1:?: uso reporte USUARIO DIAS}
 DIAS=${2:?: uso reporte $USUARIO DIAS}
 COMPLETO="-X  --format=JobName%35,start,Partition,elapsed,NCPUS,NNodes,CPUTime"
 
-echo $(( (`date +%s` - `date +%s -d $DIAS`) / 86400 ))
-
+DIAS=$(( (`date +%s` - `date +%s -d $DIAS`) / 86400 ))
 #DIAS=(date +%s - date +%s -d DIAS )/86400
-#sacct -u $USR -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $OPTALL
-#sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | tac
 
+
+#sacct -u $USR -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $OPTALL
+
+#sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | tac
+cat /etc/passwd | grep -w $USUARIO
+echo "USUARIO: $USUARIO DIAS: $DIAS"
 echo -n  "TOTAL HORAS: "
 sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) -n -X --format=CPUTimeRAW | awk '{ x += $1 } END { print int(x/3600) }'
 
 echo -n  "TOTAL CORES: "
 sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) -n -X --format=NCPUS | awk '{ x += $1 } END { print x }'
-echo "============"
 
+TRABAJOS=$(sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) | wc -l)
+
+echo "==========="
+
+echo "TOTAL TRABAJOS: $TRABAJOS " 
+
+if [[ $TRABAJOS -ne 0 ]]; then
+	echo -n "q1:	";sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | grep -c q1
+	echo -n "q4d:	";sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | grep -c q4d
+	
+	
+	echo -n "q7d:	";sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | grep -c q7d
+	echo -n "q1h:	";sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | grep -c q1h
+	echo -n "q1d:	";sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | grep -c q1d
+	echo -n "q12h:	";sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | grep -c q12h
+	echo -n "gpus:	";sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | grep -c gpus
+	echo -n "tt1d:	";sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | grep -c tt1d
+	echo -n "tt2d:	";sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | grep -c tt2d
+	echo -n "tt12h:	";sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | grep -c tt12h
+fi
+
+echo "============"
+if [[ $3 -eq "-a" ]]; then
+	sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | tac
+fi
+echo "============"
