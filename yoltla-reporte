@@ -73,9 +73,7 @@ case $1 in
             sacct -u $USUARIO  -S $(date --date="$DIAS days ago" +%F) -E $(date +%F) $COMPLETO | tac
             echo "==========="
 	    ;;
-	-h) ayuda
-	    ;;
-	--help) ayuda
+	-h | --help) ayuda
 	    ;;
 	*) uso
 	   ;;
